@@ -58,10 +58,41 @@ export default function Mapa() {
       </form>
 
       {result && (
-        <pre className="bg-gray-100 p-4 rounded-xl overflow-auto text-sm">
-          {JSON.stringify(result, null, 2)}
-        </pre>
-      )}
+  <div className="rounded-2xl border p-4 space-y-3 bg-white">
+    <div className="flex items-center justify-between">
+      <h2 className="text-lg font-semibold">Seu Mapa (prévia)</h2>
+      <button
+        onClick={() => navigator.clipboard.writeText(JSON.stringify(result, null, 2))}
+        className="text-sm underline"
+        type="button"
+      >
+        Copiar JSON
+      </button>
+    </div>
+
+    <div className="grid md:grid-cols-2 gap-4">
+      <div>
+        <h3 className="font-medium mb-1">Harmônico</h3>
+        <p className="text-sm text-gray-600">{result.block_B_harmonic}</p>
+      </div>
+      <div>
+        <h3 className="font-medium mb-1">Energia</h3>
+        <p className="text-sm text-gray-600">{result.block_C_energy}</p>
+      </div>
+      <div className="md:col-span-2">
+        <h3 className="font-medium mb-1">Resumo (ELI5)</h3>
+        <p className="text-sm text-gray-600">{result.block_E_triptych?.eli5}</p>
+      </div>
+    </div>
+
+    <details className="mt-2">
+      <summary className="cursor-pointer text-sm">Ver JSON completo</summary>
+      <pre className="mt-2 bg-gray-100 p-3 rounded-xl overflow-auto text-xs">
+        {JSON.stringify(result, null, 2)}
+      </pre>
+    </details>
+  </div>
+)}
     </main>
   );
 }
