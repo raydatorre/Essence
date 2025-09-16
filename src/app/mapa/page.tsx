@@ -11,19 +11,29 @@ export default function Mapa() {
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true); setResult(null);
-    const resp = await fetch("/api/oraculo", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, nascimento, sentimentos, mode: "basic" }),
-    });
-    const data = await resp.json();
-    setResult(data.result ?? data);
-    setLoading(false);
-  };
+ const onSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setLoading(true);
+  setResult(null);
 
+  const resp = await fetch("/api/oraculo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nome, nascimento, sentimentos, mode: "basic" }),
+  });
+
+  // opcional: se a API responder erro HTTP, mostre algo amigável
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => "");
+    setResult({ ok: false, status: resp.status, error: text || "Erro na API" });
+    setLoading(false);
+    return;
+  }
+
+  const data = await resp.json();
+  setResult(data.result ?? data);
+  setLoading(false);
+};
   return (
     <main className="max-w-3xl mx-auto px-6 py-12 space-y-8">
       <h1 className="text-3xl font-serif">Gerar Mapa (Grátis)</h1>
