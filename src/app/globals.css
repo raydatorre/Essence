@@ -1,6 +1,8 @@
 @tailwind base; @tailwind components; @tailwind utilities;
 :root{ --background:255 255 255; --foreground:22 22 26; --muted:243 244 246; --card:255 255 255; --primary:24 24 60; --accent:230 185 80; }
-html,body{height:100%} body{background:rgb(var(--background));color:rgb(var(--foreground))}
+html,body{height:100%}
+body{background:rgb(var(--background));color:rgb(var(--foreground))}
 .font-serif{font-family:ui-serif,Georgia,Cambria,"Times New Roman",Times,serif}
-.text-muted-foreground{color:#6b7280} .bg-muted{background:rgb(var(--muted))}
-.bg-background{background:rgb(var(--background))} .text-foreground{color:rgb(var(--foreground))}
+.text-muted-foreground{color:#6b7280}
+.bg-background{background:rgb(var(--background))}
+.text-foreground{color:rgb(var(--foreground))}
