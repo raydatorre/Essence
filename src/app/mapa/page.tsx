@@ -1,98 +1,115 @@
 "use client";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function Mapa() {
-  const [nome, setNome] = useState("");
-  const [nascimento, setNascimento] = useState("");
-  const [sentimentos, setSentimentos] = useState("");
-  const [result, setResult] = useState<any>(null);
+const schema = z.object({
+  name: z.string().min(2, "Informe seu nome"),
+  birth: z
+    .string()
+    .regex(/^\d{2}\/\d{2}\/\d{4}$/, "Use o formato DD/MM/AAAA"),
+  feelings: z.string().optional(),
+});
+type FormData = z.infer<typeof schema>;
+
+export default function MapaFree() {
   const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
- const onSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  setLoading(true);
-  setResult(null);
-
-  const resp = await fetch("/api/oraculo", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ nome, nascimento, sentimentos, mode: "basic" }),
+  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      birth: "",
+      feelings: "",
+    },
   });
 
-  // opcional: se a API responder erro HTTP, mostre algo amigável
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => "");
-    setResult({ ok: false, status: resp.status, error: text || "Erro na API" });
-    setLoading(false);
-    return;
+  async function onSubmit(data: FormData) {
+    try {
+      setLoading(true);
+      setError(null);
+      setResult(null);
+      const res = await fetch("/api/oraculo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: data.name,
+          nascimento: data.birth,
+          sentimentos: data.feelings,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setResult(json);
+    } catch (e: any) {
+      setError(e?.message || "Falha ao gerar o mapa.");
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const data = await resp.json();
-  setResult(data.result ?? data);
-  setLoading(false);
-};
   return (
-    <main className="max-w-3xl mx-auto px-6 py-12 space-y-8">
-      <h1 className="text-3xl font-serif">Gerar Mapa (Grátis)</h1>
+    <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
+      <header className="space-y-2">
+        <h1 className="text-3xl md:text-4xl font-serif tracking-tight">Gerar Mapa (Grátis)</h1>
+        <p className="text-muted-foreground">Preencha os campos abaixo e receba o JSON do seu mapa (mock por enquanto).</p>
+      </header>
 
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div>
-          <Label>Nome completo</Label>
-          <Input value={nome} onChange={(e)=>setNome(e.target.value)} required />
+      <Card>
+        <CardHeader>
+          <CardTitle>Dados</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <Label htmlFor="name">Nome completo</Label>
+              <Input id="name" placeholder="Ex.: Rafael Sanchez Torres" {...register("name")} />
+              {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="birth">Data de nascimento (DD/MM/AAAA)</Label>
+              <Input id="birth" placeholder="10/05/1983" {...register("birth")} />
+              {errors.birth && <p className="text-sm text-red-600 mt-1">{errors.birth.message}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="feelings">Sentimentos recentes (opcional)</Label>
+              <Input id="feelings" placeholder="ansioso, animado, focado..." {...register("feelings")} />
+            </div>
+
+            <Button type="submit" size="lg" disabled={loading}>
+              {loading ? "Gerando..." : "Gerar mapa"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {error && (
+        <div className="rounded-2xl border p-4 text-sm text-red-700 bg-red-50 border-red-200">
+          {error}
         </div>
-
-        <div>
-          <Label>Data de nascimento (DD/MM/AAAA)</Label>
-          <Input value={nascimento} onChange={(e)=>setNascimento(e.target.value)} placeholder="10/05/1983" required />
-        </div>
-
-        <div>
-          <Label>Sentimentos recentes (opcional)</Label>
-          <Input value={sentimentos} onChange={(e)=>setSentimentos(e.target.value)} />
-        </div>
-
-        <Button type="submit" disabled={loading}>{loading ? "Gerando…" : "Gerar mapa"}</Button>
-      </form>
+      )}
 
       {result && (
-  <div className="rounded-2xl border p-4 space-y-3 bg-white">
-    <div className="flex items-center justify-between">
-      <h2 className="text-lg font-semibold">Seu Mapa (prévia)</h2>
-      <button
-        onClick={() => navigator.clipboard.writeText(JSON.stringify(result, null, 2))}
-        className="text-sm underline"
-        type="button"
-      >
-        Copiar JSON
-      </button>
-    </div>
-
-    <div className="grid md:grid-cols-2 gap-4">
-      <div>
-        <h3 className="font-medium mb-1">Harmônico</h3>
-        <p className="text-sm text-gray-600">{result.block_B_harmonic}</p>
-      </div>
-      <div>
-        <h3 className="font-medium mb-1">Energia</h3>
-        <p className="text-sm text-gray-600">{result.block_C_energy}</p>
-      </div>
-      <div className="md:col-span-2">
-        <h3 className="font-medium mb-1">Resumo (ELI5)</h3>
-        <p className="text-sm text-gray-600">{result.block_E_triptych?.eli5}</p>
-      </div>
-    </div>
-
-    <details className="mt-2">
-      <summary className="cursor-pointer text-sm">Ver JSON completo</summary>
-      <pre className="mt-2 bg-gray-100 p-3 rounded-xl overflow-auto text-xs">
-        {JSON.stringify(result, null, 2)}
-      </pre>
-    </details>
-  </div>
-)}
+        <Card>
+          <CardHeader>
+            <CardTitle>Resultado (JSON)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="overflow-x-auto text-xs md:text-sm rounded-xl p-4 bg-muted">
+{JSON.stringify(result, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      )}
     </main>
   );
 }
