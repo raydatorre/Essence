@@ -3,18 +3,25 @@ import type { Metadata } from "next";
 import Header from "@/components/site/header";
 import Footer from "@/components/site/footer";
 
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
+function safeURL(v?: string): URL | undefined {
+  if (!v) return undefined;
+  try { return new URL(v); } catch { return undefined; }
+}
+
+const base = safeURL(process.env.NEXT_PUBLIC_SITE_URL);
+const siteUrl = base?.toString().replace(/\/$/, "");
 
 export const metadata: Metadata = {
   title: "Essence — Oráculo 3.1",
   description: "Seu código de essência. Sua melhor frequência.",
-  metadataBase: new URL(siteUrl),
+  // só define se for válida
+  ...(base ? { metadataBase: base } : {}),
   openGraph: {
     type: "website",
-    url: siteUrl,
+    ...(siteUrl ? { url: siteUrl } : {}),
     title: "Essence — Oráculo 3.1",
-    description: "Do harmônico de nascimento à defasagem do mundo moderno: entenda, meça e ajuste.",
+    description:
+      "Do harmônico de nascimento à defasagem do mundo moderno: entenda, meça e ajuste.",
     images: [{ url: "/og.png", width: 1200, height: 630, alt: "Essence — Oráculo 3.1" }],
   },
   twitter: {
