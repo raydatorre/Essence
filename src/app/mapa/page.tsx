@@ -1,47 +1,52 @@
 "use client";
 import { useState } from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { OraculoResponse } from "@/types/oraculo";
 
-const schema = z.object({
-  name: z.string().min(2, "Informe seu nome"),
-  birth: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, "Use o formato DD/MM/AAAA"),
-  feelings: z.string().optional(),
-});
-type FormData = z.infer<typeof schema>;
+type Resp = {
+  pessoa:{nome:string;nascimento:string;sentimentos?:string};
+  dc:{triptico:{A:string;B:string;C:string};destinos:string[];notas?:string};
+  ac:{R:number;Q:number;FPC:number;FP:number;phi:number};
+  recomendacoes:string[];
+  ts:string;
+};
 
 export default function MapaFree() {
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<OraculoResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [loading,setLoading]=useState(false);
+  const [data,setData]=useState<Resp|null>(null);
+  const [err,setErr]=useState<string|null>(null);
+  const [status,setStatus]=useState<string>("");
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setLoading(true); setData(null); setErr(null); setStatus("enviando...");
+    const fd = new FormData(e.currentTarget);
+    const nome = String(fd.get("nome")||"");
+    const nascimento = String(fd.get("nascimento")||"");
+    const sentimentos = String(fd.get("sentimentos")||"");
 
-  async function onSubmit(data: FormData) {
     try {
-      setLoading(true); setError(null); setResult(null);
       const res = await fetch("/api/oraculo", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          nome: data.name,
-          nascimento: data.birth,
-          sentimentos: data.feelings,
-        }),
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ nome, nascimento, sentimentos })
       });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: OraculoResponse = await res.json();
-      setResult(json);
-    } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : String(e);
-      setError(msg || "Falha ao gerar o mapa.");
+      setStatus(`POST /api/oraculo -> ${res.status}`);
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json() as Resp;
+      setData(json);
+    } catch (e:any) {
+      setErr(e?.message || "Falha ao gerar o mapa (usando fallback).");
+      // Fallback local sempre mostra algo
+      const mock: Resp = {
+        pessoa: { nome, nascimento, sentimentos },
+        dc: {
+          triptico: { A:"Clareza e síntese", B:"Execução com foco", C:"Propósito em orientar" },
+          destinos: ["Expressão","Serviço","Estrutura"], notas:"(fallback)"
+        },
+        ac: { R:0.72, Q:0.33, FPC:0.48, FP:0.61, phi:52 },
+        recomendacoes: ["Respiração 4–7–8", "1 pomodoro (25 min)", "Desligar telas 60 min antes de dormir"],
+        ts: new Date().toISOString(),
+      };
+      setData(mock);
     } finally {
       setLoading(false);
     }
@@ -51,62 +56,97 @@ export default function MapaFree() {
     <main className="max-w-5xl mx-auto px-6 py-12 space-y-8">
       <header className="space-y-2">
         <h1 className="text-3xl md:text-4xl font-serif tracking-tight">Gerar Mapa (Grátis)</h1>
-        <p className="text-muted-foreground">Preencha os campos abaixo e receba o JSON do seu mapa (mock por enquanto).</p>
+        <p className="text-muted-foreground">Preencha e clique no botão. Se a API falhar, mostramos um resultado de fallback.</p>
       </header>
 
-      <Card>
-        <CardHeader><CardTitle>Dados</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="name">Nome completo</Label>
-              <Input id="name" placeholder="Ex.: Rafael Sanchez Torres" {...register("name")} />
-              {errors.name && <p className="text-sm text-red-600 mt-1">{errors.name.message}</p>}
-            </div>
+      <div className="rounded-2xl border bg-card p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="nome" className="block text-sm font-medium mb-1">Nome completo</label>
+            <input id="nome" name="nome" required placeholder="Ex.: Ana Silva"
+              className="flex h-11 w-full rounded-2xl border px-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
 
-            <div>
-              <Label htmlFor="birth">Data de nascimento (DD/MM/AAAA)</Label>
-              <Input
-                id="birth" placeholder="10/05/1983" inputMode="numeric"
-                {...register("birth")}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/[^0-9]/g, "");
-                  let out = v.slice(0,2);
-                  if (v.length > 2) out += "/" + v.slice(2,4);
-                  if (v.length > 4) out += "/" + v.slice(4,8);
-                  e.target.value = out;
-                }}
-              />
-              {errors.birth && <p className="text-sm text-red-600 mt-1">{errors.birth.message}</p>}
-            </div>
+          <div>
+            <label htmlFor="nascimento" className="block text-sm font-medium mb-1">Data (DD/MM/AAAA)</label>
+            <input id="nascimento" name="nascimento" required placeholder="10/05/1983" inputMode="numeric"
+              onChange={(e)=>{
+                const v=e.currentTarget.value.replace(/[^0-9]/g,"");
+                let out=v.slice(0,2); if(v.length>2) out+="/"+v.slice(2,4); if(v.length>4) out+="/"+v.slice(4,8);
+                e.currentTarget.value=out;
+              }}
+              className="flex h-11 w-full rounded-2xl border px-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
 
-            <div>
-              <Label htmlFor="feelings">Sentimentos recentes (opcional)</Label>
-              <Input id="feelings" placeholder="ansioso, animado, focado..." {...register("feelings")} />
-            </div>
+          <div>
+            <label htmlFor="sentimentos" className="block text-sm font-medium mb-1">Sentimentos (opcional)</label>
+            <input id="sentimentos" name="sentimentos" placeholder="ansioso, animado, focado..."
+              className="flex h-11 w-full rounded-2xl border px-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
+          </div>
 
-            {/* BOTÃO NATIVO VISÍVEL */}
-            <div className="pt-1">
-              <button
-                type="submit"
-                data-testid="submit-mapa"
-                className="w-full h-12 rounded-2xl border bg-black text-white font-medium hover:opacity-90 transition disabled:opacity-60"
-                disabled={loading}
-              >
-                {loading ? "Gerando..." : "Gerar mapa"}
-              </button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          {/* BOTÃO NATIVO GARANTIDO */}
+          <div className="pt-1">
+            <button
+              type="submit"
+              data-testid="submit-mapa"
+              style={{display:"block"}}
+              className="w-full md:w-auto h-12 rounded-2xl border bg-black text-white font-medium hover:opacity-90 transition disabled:opacity-60"
+              disabled={loading}
+            >
+              {loading ? "Gerando..." : "Gerar mapa"}
+            </button>
+          </div>
+        </form>
 
-      {error && (
-        <div className="rounded-2xl border p-4 text-sm text-red-700 bg-red-50 border-red-200">{error}</div>
-      )}
+        {/* debug leve */}
+        <p className="text-xs text-muted-foreground">status: {status}</p>
+        {err && <p className="text-sm text-red-600">erro: {err}</p>}
+      </div>
 
-      {result && (
+      {data && (
         <div className="space-y-6">
-          {/* cards do resultado (mesmo de antes) */}
+          <section className="grid md:grid-cols-3 gap-6">
+            <div className="rounded-2xl border bg-card p-5">
+              <h2 className="text-lg font-semibold mb-2">Resumo</h2>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p><span className="text-foreground font-medium">Nome:</span> {data.pessoa.nome}</p>
+                <p><span className="text-foreground font-medium">Nascimento:</span> {data.pessoa.nascimento}</p>
+                {data.pessoa.sentimentos && <p><span className="text-foreground font-medium">Sentimentos:</span> {data.pessoa.sentimentos}</p>}
+                <p className="text-[11px] mt-2">Gerado: {new Date(data.ts).toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border bg-card p-5">
+              <h2 className="text-lg font-semibold mb-2">Tríptico (DC)</h2>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p><span className="text-foreground font-medium">A:</span> {data.dc.triptico.A}</p>
+                <p><span className="text-foreground font-medium">B:</span> {data.dc.triptico.B}</p>
+                <p><span className="text-foreground font-medium">C:</span> {data.dc.triptico.C}</p>
+                <p className="mt-2"><span className="text-foreground font-medium">Destinos:</span> {data.dc.destinos.join(", ")}</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border bg-card p-5">
+              <h2 className="text-lg font-semibold mb-2">Métricas (AC)</h2>
+              <div className="text-sm text-muted-foreground grid grid-cols-2 gap-2">
+                <div><span className="text-foreground font-medium">R:</span> {data.ac.R}</div>
+                <div><span className="text-foreground font-medium">Q:</span> {data.ac.Q}</div>
+                <div><span className="text-foreground font-medium">FPC:</span> {data.ac.FPC}</div>
+                <div><span className="text-foreground font-medium">FP:</span> {data.ac.FP}</div>
+                <div className="col-span-2"><span className="text-foreground font-medium">φ°:</span> {data.ac.phi}°</div>
+              </div>
+            </div>
+          </section>
+
+          <div className="rounded-2xl border bg-card p-5">
+            <h2 className="text-lg font-semibold mb-2">Recomendações</h2>
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+              {data.recomendacoes.map((r,i)=><li key={i}>{r}</li>)}
+            </ul>
+          </div>
+
+          <div className="rounded-2xl border bg-card p-5">
+            <h2 className="text-lg font-semibold mb-2">Resultado (JSON)</h2>
+            <pre className="overflow-x-auto text-xs md:text-sm rounded-xl p-4 bg-muted">{JSON.stringify(data,null,2)}</pre>
+          </div>
         </div>
       )}
     </main>
