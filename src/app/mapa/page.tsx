@@ -40,8 +40,9 @@ export default function MapaFree() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: OraculoResponse = await res.json();
       setResult(json);
-    } catch (e: unknown) { const __m = e instanceof Error ? e.message : String(e);
-      setError(__m || "Falha ao gerar o mapa.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg || "Falha ao gerar o mapa.");
     } finally {
       setLoading(false);
     }
@@ -66,13 +67,16 @@ export default function MapaFree() {
 
             <div>
               <Label htmlFor="birth">Data de nascimento (DD/MM/AAAA)</Label>
-              <Input id="birth" placeholder="10/05/1983" inputMode="numeric"
+              <Input
+                id="birth"
+                placeholder="10/05/1983"
+                inputMode="numeric"
                 {...register("birth")}
                 onChange={(e) => {
                   const v = e.target.value.replace(/[^0-9]/g, "");
-                  let out = v.slice(0,2);
-                  if (v.length > 2) out += "/" + v.slice(2,4);
-                  if (v.length > 4) out += "/" + v.slice(4,8);
+                  let out = v.slice(0, 2);
+                  if (v.length > 2) out += "/" + v.slice(2, 4);
+                  if (v.length > 4) out += "/" + v.slice(4, 8);
                   e.target.value = out;
                 }}
               />
@@ -84,8 +88,14 @@ export default function MapaFree() {
               <Input id="feelings" placeholder="ansioso, animado, focado..." {...register("feelings")} />
             </div>
 
-            <Button type="submit" size="lg" disabled={loading}>
-              {loading ? "Gerando..." : "Gerar mapa"}
+            <Button type="submit" size="lg" disabled={loading} aria-busy={loading} className="relative">
+              {loading && (
+                <svg className="absolute left-4 top-1/2 -translate-y-1/2 animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                </svg>
+              )}
+              <span className={loading ? "opacity-70" : ""}>{loading ? "Gerando..." : "Gerar mapa"}</span>
             </Button>
           </form>
         </CardContent>
