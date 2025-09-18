@@ -40,8 +40,8 @@ export default function MapaFree() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: OraculoResponse = await res.json();
       setResult(json);
-    } catch (e: any) {
-      setError(e?.message || "Falha ao gerar o mapa.");
+    } catch (e: unknown) { const __m = e instanceof Error ? e.message : String(e);
+      setError(__m || "Falha ao gerar o mapa.");
     } finally {
       setLoading(false);
     }
