@@ -1,47 +1,39 @@
-import "./globals.css";
 import type { Metadata } from "next";
-import Header from "@/components/site/header";
-import Footer from "@/components/site/footer";
-
-function safeURL(v?: string): URL | undefined {
-  if (!v) return undefined;
-  try { return new URL(v); } catch { return undefined; }
-}
-
-const base = safeURL(process.env.NEXT_PUBLIC_SITE_URL);
-const siteUrl = base?.toString().replace(/\/$/, "");
+import "./globals.css";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Essence — Oráculo 3.1",
-  description: "Seu código de essência. Sua melhor frequência.",
-  // só define se for válida
-  ...(base ? { metadataBase: base } : {}),
+  metadataBase: new URL(site.url),
+  title: {
+    default: "Essence — Oráculo 3.1",
+    template: "%s — Essence",
+  },
+  description: site.description,
   openGraph: {
     type: "website",
-    ...(siteUrl ? { url: siteUrl } : {}),
-    title: "Essence — Oráculo 3.1",
-    description:
-      "Do harmônico de nascimento à defasagem do mundo moderno: entenda, meça e ajuste.",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "Essence — Oráculo 3.1" }],
+    url: site.url,
+    siteName: "Essence",
+    images: [{ url: site.ogImage, width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Essence — Oráculo 3.1",
-    description:
-      "Do harmônico de nascimento à defasagem do mundo moderno: entenda, meça e ajuste.",
-    images: ["/og.png"],
+    description: site.description,
+    images: [site.ogImage],
   },
+  alternates: { canonical: site.url },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body className="bg-background text-foreground">
-        <div className="min-h-dvh flex flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
+      <body>
+        {children}
+        {/* métricas em prod (não quebra local) */}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
