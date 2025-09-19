@@ -15,15 +15,25 @@ export default function MapaFree() {
   const [data,setData]=useState<Resp|null>(null);
   const [err,setErr]=useState<string|null>(null);
   const [status,setStatus]=useState<string>("");
-  const jsonRef = useRef<HTMLPreElement>(null);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const nomeRef = useRef<HTMLInputElement>(null);
+  const nascRef = useRef<HTMLInputElement>(null);
+  const sentRef = useRef<HTMLInputElement>(null);
+
+  function onDateInput(e: React.FormEvent<HTMLInputElement>) {
+    const el = e.currentTarget;
+    const v = el.value.replace(/[^0-9]/g, "");
+    let out = v.slice(0,2);
+    if (v.length > 2) out += "/" + v.slice(2,4);
+    if (v.length > 4) out += "/" + v.slice(4,8);
+    el.value = out;
+  }
+
+  async function handleClick() {
     setLoading(true); setData(null); setErr(null); setStatus("enviando...");
-    const fd = new FormData(e.currentTarget);
-    const nome = String(fd.get("nome")||"").trim();
-    const nascimento = String(fd.get("nascimento")||"").trim();
-    const sentimentos = String(fd.get("sentimentos")||"").trim();
+    const nome = (nomeRef.current?.value || "").trim();
+    const nascimento = (nascRef.current?.value || "").trim();
+    const sentimentos = (sentRef.current?.value || "").trim();
 
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(nascimento)) {
       setErr("Use o formato DD/MM/AAAA."); setLoading(false); return;
@@ -56,21 +66,6 @@ export default function MapaFree() {
     }
   }
 
-  function onDateInput(e: React.FormEvent<HTMLInputElement>) {
-    const el = e.currentTarget;
-    const v = el.value.replace(/[^0-9]/g, "");
-    let out = v.slice(0,2);
-    if (v.length > 2) out += "/" + v.slice(2,4);
-    if (v.length > 4) out += "/" + v.slice(4,8);
-    el.value = out;
-  }
-
-  async function copyJson() {
-    if (!data) return;
-    const t = JSON.stringify(data,null,2);
-    try { await navigator.clipboard.writeText(t); } finally {}
-  }
-
   useEffect(()=>{ if(status) console.info(status); },[status]);
 
   return (
@@ -81,16 +76,17 @@ export default function MapaFree() {
       </header>
 
       <div className="rounded-2xl border bg-card p-5 space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+        {/* Formulário sem submit automático */}
+        <form className="space-y-4" noValidate autoComplete="off" onKeyDown={(e)=>{ if(e.key==='Enter') e.preventDefault(); }}>
           <div>
             <label htmlFor="nome" className="block text-sm font-medium mb-1">Nome completo</label>
-            <input id="nome" name="nome" required placeholder="Ex.: Ana Silva"
+            <input ref={nomeRef} id="nome" name="nome" required placeholder="Ex.: Ana Silva"
               className="flex h-11 w-full rounded-2xl border px-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
 
           <div>
             <label htmlFor="nascimento" className="block text-sm font-medium mb-1">Data (DD/MM/AAAA)</label>
-            <input id="nascimento" name="nascimento" required placeholder="10/05/1983"
+            <input ref={nascRef} id="nascimento" name="nascimento" required placeholder="10/05/1983"
               inputMode="numeric" pattern="^\\d{2}/\\d{2}/\\d{4}$" onInput={onDateInput}
               className="flex h-11 w-full rounded-2xl border px-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
             <p className="text-xs text-muted-foreground mt-1">Formato: 2 dígitos / 2 dígitos / 4 dígitos.</p>
@@ -98,12 +94,21 @@ export default function MapaFree() {
 
           <div>
             <label htmlFor="sentimentos" className="block text-sm font-medium mb-1">Sentimentos (opcional)</label>
-            <input id="sentimentos" name="sentimentos" placeholder="ansioso, animado, focado..."
+            <input ref={sentRef} id="sentimentos" name="sentimentos" placeholder="ansioso, animado, focado..."
               className="flex h-11 w-full rounded-2xl border px-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
 
+          {/* Botão explícito, cor forçada p/ não “sumir” */}
           <div className="pt-1">
-            <Button type="submit" size="lg" disabled={loading} aria-busy={loading} className="relative w-full md:w-auto">
+            <Button
+              id="btn-enviar"
+              type="button"
+              onClick={handleClick}
+              size="lg"
+              disabled={loading}
+              aria-busy={loading}
+              className="relative w-full md:w-auto !bg-black !text-white"
+            >
               {loading && (
                 <svg className="absolute left-4 top-1/2 -translate-y-1/2 animate-spin h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -155,11 +160,13 @@ export default function MapaFree() {
           <div className="rounded-2xl border bg-card p-5">
             <div className="flex items-center justify-between gap-4 mb-2">
               <h2 className="text-lg font-semibold">Resultado (JSON)</h2>
-              <Button type="button" variant="outline" size="sm" onClick={copyJson}>
+              <Button type="button" variant="outline" size="sm" onClick={async()=>{
+                if(!data) return; await navigator.clipboard.writeText(JSON.stringify(data,null,2));
+              }}>
                 Copiar JSON
               </Button>
             </div>
-            <pre ref={jsonRef} className="overflow-x-auto text-xs md:text-sm rounded-xl p-4 bg-muted">
+            <pre className="overflow-x-auto text-xs md:text-sm rounded-xl p-4 bg-muted">
 {data ? JSON.stringify(data,null,2) : ""}
             </pre>
           </div>
@@ -168,3 +175,4 @@ export default function MapaFree() {
     </main>
   );
 }
+
