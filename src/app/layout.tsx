@@ -25,7 +25,8 @@ export const metadata: Metadata = {
     description: site.description,
     images: [site.ogImage],
   },
-  alternates: { canonical: site.url },
+  alternates: { canonical: site.url },,
+  manifest: "/manifest.webmanifest"
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
