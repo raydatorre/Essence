@@ -1,6 +1,3 @@
-cd ~/essence
-
-cat > src/app/mapa/page.tsx <<'TSX'
 "use client";
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -18,7 +15,6 @@ export default function MapaFree() {
   const [data,setData]=useState<Resp|null>(null);
   const [err,setErr]=useState<string|null>(null);
   const [status,setStatus]=useState<string>("");
-  const [copied,setCopied]=useState(false);
   const jsonRef = useRef<HTMLPreElement>(null);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -46,13 +42,10 @@ export default function MapaFree() {
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       setErr(msg || "Falha ao gerar o mapa (usando fallback).");
-      // Fallback local
       const mock: Resp = {
         pessoa: { nome, nascimento, sentimentos },
-        dc: {
-          triptico: { A:"Clareza e síntese", B:"Execução com foco", C:"Propósito em orientar" },
-          destinos: ["Expressão","Serviço","Estrutura"], notas:"(fallback)"
-        },
+        dc: { triptico: { A:"Clareza e síntese", B:"Execução com foco", C:"Propósito em orientar" },
+          destinos: ["Expressão","Serviço","Estrutura"], notas:"(fallback)" },
         ac: { R:0.72, Q:0.33, FPC:0.48, FP:0.61, phi:52 },
         recomendacoes: ["Respiração 4–7–8", "1 pomodoro (25 min)", "Desligar telas 60 min antes de dormir"],
         ts: new Date().toISOString(),
@@ -63,7 +56,6 @@ export default function MapaFree() {
     }
   }
 
-  // máscara de data
   function onDateInput(e: React.FormEvent<HTMLInputElement>) {
     const el = e.currentTarget;
     const v = el.value.replace(/[^0-9]/g, "");
@@ -75,22 +67,8 @@ export default function MapaFree() {
 
   async function copyJson() {
     if (!data) return;
-    const text = JSON.stringify(data, null, 2);
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(()=>setCopied(false), 1500);
-    } catch {
-      if (jsonRef.current) {
-        const range = document.createRange();
-        range.selectNodeContents(jsonRef.current);
-        const sel = window.getSelection();
-        sel?.removeAllRanges(); sel?.addRange(range);
-        document.execCommand("copy");
-        setCopied(true);
-        setTimeout(()=>setCopied(false), 1500);
-      }
-    }
+    const t = JSON.stringify(data,null,2);
+    try { await navigator.clipboard.writeText(t); } finally {}
   }
 
   useEffect(()=>{ if(status) console.info(status); },[status]);
@@ -112,10 +90,8 @@ export default function MapaFree() {
 
           <div>
             <label htmlFor="nascimento" className="block text-sm font-medium mb-1">Data (DD/MM/AAAA)</label>
-            <input
-              id="nascimento" name="nascimento" required placeholder="10/05/1983"
-              inputMode="numeric" pattern="^\d{2}/\d{2}/\d{4}$"
-              onInput={onDateInput}
+            <input id="nascimento" name="nascimento" required placeholder="10/05/1983"
+              inputMode="numeric" pattern="^\\d{2}/\\d{2}/\\d{4}$" onInput={onDateInput}
               className="flex h-11 w-full rounded-2xl border px-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
             <p className="text-xs text-muted-foreground mt-1">Formato: 2 dígitos / 2 dígitos / 4 dígitos.</p>
           </div>
@@ -126,7 +102,6 @@ export default function MapaFree() {
               className="flex h-11 w-full rounded-2xl border px-3 text-base bg-white focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
 
-          {/* BOTÃO DS, com spinner e w-full no mobile */}
           <div className="pt-1">
             <Button type="submit" size="lg" disabled={loading} aria-busy={loading} className="relative w-full md:w-auto">
               {loading && (
@@ -180,11 +155,7 @@ export default function MapaFree() {
           <div className="rounded-2xl border bg-card p-5">
             <div className="flex items-center justify-between gap-4 mb-2">
               <h2 className="text-lg font-semibold">Resultado (JSON)</h2>
-              <Button type="button" variant="outline" size="sm" onClick={async()=>{
-                if(!data) return;
-                const t = JSON.stringify(data,null,2);
-                try { await navigator.clipboard.writeText(t); } finally {}
-              }}>
+              <Button type="button" variant="outline" size="sm" onClick={copyJson}>
                 Copiar JSON
               </Button>
             </div>

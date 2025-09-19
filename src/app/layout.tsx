@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Header from "@/components/site/header";
+import Footer from "@/components/site/footer";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { site } from "@/lib/site";
@@ -25,15 +27,19 @@ export const metadata: Metadata = {
     description: site.description,
     images: [site.ogImage],
   },
-  alternates: { canonical: site.url },,
-  manifest: "/manifest.webmanifest"
+  alternates: { canonical: site.url },
+  manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>
-        {children}
+      <body className="bg-background text-foreground">
+        <div className="min-h-dvh flex flex-col">
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
         <Analytics />
         <SpeedInsights />
       </body>
