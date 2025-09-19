@@ -33,8 +33,9 @@ export default function MapaFree() {
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json() as Resp;
       setData(json);
-    } catch (e:any) {
-      setErr(e?.message || "Falha ao gerar o mapa (usando fallback).");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setErr(msg || "Falha ao gerar o mapa (usando fallback).");
       // Fallback local sempre mostra algo
       const mock: Resp = {
         pessoa: { nome, nascimento, sentimentos },
