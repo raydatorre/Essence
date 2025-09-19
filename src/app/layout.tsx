@@ -4,12 +4,14 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { site } from "@/lib/site";
 
+function safeURL(v?: string) {
+  try { return v ? new URL(v) : undefined; } catch { return undefined; }
+}
+const base = safeURL(site.url);
+
 export const metadata: Metadata = {
-  metadataBase: new URL(site.url),
-  title: {
-    default: "Essence — Oráculo 3.1",
-    template: "%s — Essence",
-  },
+  ...(base ? { metadataBase: base } : {}),
+  title: { default: "Essence — Oráculo 3.1", template: "%s — Essence" },
   description: site.description,
   openGraph: {
     type: "website",
@@ -31,7 +33,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR">
       <body>
         {children}
-        {/* métricas em prod (não quebra local) */}
         <Analytics />
         <SpeedInsights />
       </body>
