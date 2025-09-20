@@ -1,53 +1,36 @@
 "use client";
 import Link from "next/link";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Activity, MessageSquare } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Home() {
   return (
-    <main className="max-w-5xl mx-auto px-6 py-12 space-y-12">
-      <section className="text-center space-y-4">
-        <h1 className="text-4xl md:text-5xl font-serif tracking-tight">Seu código de essência. Sua melhor frequência.</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">Do harmônico de nascimento à defasagem do mundo moderno: entenda, meça e ajuste com rituais simples.</p>
-        <div className="flex items-center justify-center gap-3">
-          <Link href="#free"><Button size="lg">Gerar mapa grátis</Button></Link>
-          <Link href="/explicacao"><Button size="lg" variant="outline">Entenda o método</Button></Link>
-        </div>
-      </section>
+    <div className="mx-auto max-w-5xl px-4 py-8">
+      <h1 className="text-2xl font-semibold mb-6">Oráculo 3.1</h1>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Card 1 (exemplo existente) */}
+        <Card className="p-6">
+          <div className="text-sm opacity-70 mb-2">Introdução</div>
+          <div className="text-lg font-semibold mb-3">Explicação</div>
+          <Link href="/explicacao" className="underline text-sm">Ir para /explicacao</Link>
+        </Card>
 
-      <section className="grid md:grid-cols-3 gap-6" id="free">
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5" /> Essência (Grátis)</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">Mapa do nascimento: Caldéia, Cabalística e Védica (resumo) + Tríptico.</p>
-            <Link href="/mapa"><Button className="w-full">Gerar mapa</Button></Link>
-          </CardContent>
+        {/* Card 2 (Mapa) */}
+        <Card className="p-6">
+          <div className="text-sm opacity-70 mb-2">Ferramenta</div>
+          <div className="text-lg font-semibold mb-3">Mapa</div>
+          <Link href="/mapa" className="underline text-sm">Ir para /mapa</Link>
         </Card>
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Activity className="w-5 h-5" /> Energia (Premium)</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">Defasagem (φ°), R, Q, FPC, FP e rituais práticos.</p>
-            <Button className="w-full" variant="secondary" disabled>Em breve</Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Chat (Premium)</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">Orientação contínua com re-estimativa de R/Q a cada mensagem.</p>
-            <Button className="w-full" variant="ghost" disabled>Em breve</Button>
-          </CardContent>
-        </Card>
-      </section>
 
-      <section className="rounded-2xl border bg-card p-6 space-y-3">
-        <h2 className="text-xl font-semibold">Como funciona (DC → AC)</h2>
-        <div className="grid md:grid-cols-3 gap-4 text-sm text-muted-foreground">
-          <div><p className="font-medium text-foreground mb-1">1) DC — Código</p><p>Mapa estável do nascimento (Caldéia, Cabalística, Védica) com tríptico A–C.</p></div>
-          <div><p className="font-medium text-foreground mb-1">2) AC — Energia</p><p>Estado atual: R, Q, φ°, FPC, FP. Entenda sua defasagem.</p></div>
-          <div><p className="font-medium text-foreground mb-1">3) Ajuste</p><p>Rituais simples e re-estimativa de R/Q no chat para voltar à sua melhor frequência.</p></div>
-        </div>
-      </section>
-    </main>
+        {/* Card 3 (Energia Premium) — agora ativo */}
+        <Card className="p-6">
+          <div className="text-sm opacity-70 mb-2">Premium</div>
+          <div className="text-lg font-semibold mb-3">Energia (Premium)</div>
+          <Link href="/energia" className="underline text-sm">Ir para /energia</Link>
+        </Card>
+      </div>
+    </div>
   );
 }
