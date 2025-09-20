@@ -1,3 +1,4 @@
+cat > src/app/energia/page.tsx <<'TSX'
 "use client";
 
 import { useState, useRef, useCallback } from "react";
@@ -20,7 +21,7 @@ export default function EnergiaPage() {
   // Máscara simples DD/MM/AAAA
   const onDataChange = (v: string) => {
     const digits = v.replace(/\D/g, "").slice(0, 8);
-    const p = [];
+    const p: string[] = [];
     if (digits.length > 0) p.push(digits.slice(0, 2));
     if (digits.length > 2) p.push(digits.slice(2, 4));
     if (digits.length > 4) p.push(digits.slice(4, 8));
@@ -43,19 +44,14 @@ export default function EnergiaPage() {
 
     const payload = { nome: nome.trim(), data, sentimentos: sent.trim() };
 
-    // Primeiro tenta bater na API existente (/api/oraculo) para manter fluxo,
-    // mas usamos apenas como "ping" — o cálculo é local e determinístico.
     try {
       await fetch("/api/oraculo", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome: payload.nome, data: payload.data }),
       }).catch(() => {});
-    } catch (_) {
-      // ignorar falha: faremos mock local de qualquer forma
-    }
+    } catch (_) {}
 
-    // Mock local
     const out = computeEnergiaMock(payload);
     setResult(out);
     setStatus("ok");
@@ -68,14 +64,10 @@ export default function EnergiaPage() {
     navigator.clipboard
       .writeText(json)
       .then(() => {
-        if (copyRef.current) {
-          copyRef.current.value = json;
-        }
+        if (copyRef.current) copyRef.current.value = json;
       })
       .catch(() => {
-        if (copyRef.current) {
-          copyRef.current.value = json; // fallback visual
-        }
+        if (copyRef.current) copyRef.current.value = json;
       });
   };
 
@@ -135,10 +127,17 @@ export default function EnergiaPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button type="button" onClick={handleCalcular} disabled={loading}>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            onClick={handleCalcular}
+            disabled={loading}
+            aria-label="Calcular energia"
+            className="inline-flex"
+          >
             {loading ? "Calculando..." : "Calcular energia"}
           </Button>
+
           {status === "error" && (
             <span className="text-sm text-red-600">
               Verifique nome e data no formato DD/MM/AAAA.
@@ -206,4 +205,3 @@ export default function EnergiaPage() {
     </div>
   );
 }
-
