@@ -10,6 +10,7 @@ import { computeEnergiaMock, EnergiaOutput } from "@/lib/energia";
 import EnergyBars from "@/components/energia/EnergyBars";
 import FpcRadial from "@/components/energia/FpcRadial";
 import { encodeQuery, parseQuery, isValidDateBR } from "@/lib/url";
+import { exportEnergiaPdf } from "@/lib/pdf";
 
 const LS_KEY = "energia:last";
 
@@ -137,6 +138,11 @@ export default function EnergiaPage() {
     navigator.clipboard.writeText(url).catch(() => {});
   };
 
+  const exportPDF = () => {
+    if (!result) return;
+    exportEnergiaPdf(nome, data, sent, result);
+  };
+
   const handleClear = () => {
     setNome("");
     setData("");
@@ -254,9 +260,11 @@ export default function EnergiaPage() {
 
             <div className="space-y-2">
               <div className="text-sm font-medium">Exportar</div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Button type="button" onClick={copyJSON}>Copiar JSON</Button>
-                <span className="text-xs opacity-70">Copia para área de transferência</span>
+                <Button type="button" onClick={copyLink} variant="secondary">Copiar link</Button>
+                <Button type="button" onClick={exportPDF} variant="secondary">Exportar PDF</Button>
+                <span className="text-xs opacity-70">Copia/compartilha ou exporta PDF da leitura</span>
               </div>
               <textarea ref={copyRef} readOnly rows={6} className="w-full rounded-xl border p-3 text-xs" placeholder="JSON copiado aparecerá aqui (fallback visual)." />
             </div>
