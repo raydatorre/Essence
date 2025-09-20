@@ -1,47 +1,23 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Header from "@/components/site/header";
-import Footer from "@/components/site/footer";
-import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import { ThemeProvider } from "@/components/theme-provider";
 import { site } from "@/lib/site";
-
-function safeURL(v?: string) {
-  try { return v ? new URL(v) : undefined; } catch { return undefined; }
-}
-const base = safeURL(site.url);
+import GlobalBackHome from "@/components/global-back-home";
 
 export const metadata: Metadata = {
-  ...(base ? { metadataBase: base } : {}),
-  title: { default: "Essence — Oráculo 3.1", template: "%s — Essence" },
-  description: site.description,
-  openGraph: {
-    type: "website",
-    url: site.url,
-    siteName: "Essence",
-    images: [{ url: site.ogImage, width: 1200, height: 630 }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Essence — Oráculo 3.1",
-    description: site.description,
-    images: [site.ogImage],
-  },
-  alternates: { canonical: site.url },
-  manifest: "/manifest.webmanifest",
+  title: site?.title ?? "Oráculo 3.1",
+  description: site?.description ?? "Leituras e mapas do Oráculo 3.1",
+  metadataBase: new URL(site?.url ?? "http://localhost:3000"),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <body className="bg-background text-foreground">
-        <div className="min-h-dvh flex flex-col">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
-        <Analytics />
-        <SpeedInsights />
+    <html lang="pt-BR" suppressHydrationWarning className="h-full">
+      <body className="min-h-dvh bg-white text-gray-900 transition-colors duration-300 dark:bg-[#0b0d10] dark:text-gray-100">
+        <ThemeProvider>
+          <GlobalBackHome />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
