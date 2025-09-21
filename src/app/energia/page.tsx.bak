@@ -13,7 +13,6 @@ import EnergyRadar from "@/components/energia/EnergyRadar";
 import { encodeQuery, parseQuery, isValidDateBR } from "@/lib/url";
 import { exportEnergiaPdf } from "@/lib/pdf";
 import ThemeToggle from "@/components/energia/ThemeToggle";
-import { addToHistory } from "@/lib/history";
 import { makeComparison } from "@/lib/trend";
 
 const LS_KEY = "energia:last";
@@ -92,7 +91,6 @@ export default function EnergiaPage() {
     } catch {}
     const out = computeEnergiaMock({ nome: n, data: d, sentimentos: s });
     setResult(out); setStatus("ok"); setLoading(false);
-    try { addToHistory({ nome: n, data: d, sent: s, result: out }); } catch {}
     persist(n, d, s); pushUrl(n, d, s);
 
     // prepara dados do radar comparativo
@@ -180,7 +178,6 @@ export default function EnergiaPage() {
           <Button type="button" onClick={() => { const qs = encodeQuery({ nome, data, sent }); navigator.clipboard.writeText(`${window.location.origin}/energia${qs ? "?" + qs : ""}`); }} variant="secondary" className="inline-flex">Copiar link</Button>
           <Button type="button" onClick={handleClear} variant="secondary" className="inline-flex">Limpar</Button>
           <span className="text-xs opacity-70">Dica: Enter não envia; use o botão.</span>
-          <a href="/historico" className="text-xs underline">Ver histórico</a>
           {status === "error" && <span className="text-sm text-red-600">Verifique nome e data no formato DD/MM/AAAA.</span>}
         </div>
       </Card>
