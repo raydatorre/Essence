@@ -5,9 +5,9 @@ const KEY = "energia:historico:v1";
 export type HistItem = {
   id: string;
   nome: string;
-  data: string;      // DD/MM/AAAA
+  data: string;
   sent: string;
-  createdAt: string; // ISO
+  createdAt: string;
   result: EnergiaOutput;
 };
 
@@ -28,8 +28,19 @@ export function addToHistory(entry: Omit<HistItem, "id" | "createdAt">) {
   const items = loadHistory();
   const id = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
   const createdAt = new Date().toISOString();
-  items.unshift({ id, createdAt, ...entry });
+  const full = { id, createdAt, ...entry };
+  items.unshift(full);
   saveHistory(items);
+
+  // sincroniza com backend (agora DB real)
+  try {
+    fetch("/api/history", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(full), // envia createdAt/id para preservar no import também
+    }).catch(() => {});
+  } catch {}
+
   return id;
 }
 

@@ -11,7 +11,21 @@ export default function HistoricoPage() {
   const [items, setItems] = useState<HistItem[]>([]);
   const [q, setQ] = useState("");
 
-  const refresh = () => setItems(loadHistory());
+  const refresh = async () => {
+    try {
+      const r = await fetch("/api/history");
+      if (r.ok) {
+        const serverItems: HistItem[] = await r.json();
+        if (Array.isArray(serverItems) && serverItems.length > 0) {
+          setItems(serverItems);
+          return;
+        }
+      }
+    } catch {}
+    // fallback local
+    setItems(loadHistory());
+  };
+
   useEffect(() => { refresh(); }, []);
 
   const filtered = useMemo(() => {
@@ -53,16 +67,21 @@ export default function HistoricoPage() {
     refresh();
   };
 
-  const clearAll = () => {
-    if (!confirm("Limpar todo o histórico?")) return;
-    clearHistory(); refresh();
+  const clearAll = async () => {
+    if (!confirm("Limpar todo o histórico (local e backend)?")) return;
+    clearHistory();
+    try { await fetch("/api/history", { method: "DELETE" }); } catch {}
+    refresh();
   };
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Histórico de leituras</h1>
-        <Link href="/" className="text-sm underline">Home</Link>
+        <div className="flex items-center gap-3">
+          <Link href="/insights" className="text-sm underline">Ver insights</Link>
+          <Link href="/" className="text-sm underline">Home</Link>
+        </div>
       </div>
 
       <Card className="p-4 mb-4">
